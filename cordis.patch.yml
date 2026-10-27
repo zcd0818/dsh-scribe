@@ -1,0 +1,61 @@
+- insert:
+    - id: dsh-scribe
+      name: 'dsh-scribe'
+      config:
+        enabled: true
+        defaultProvider: local
+        autoInject: true
+        autoSave: true
+        injectLimit: 5
+        injectMaxChars: 1200
+        includeSubagents: false
+        logLevel: info
+        ui:
+          sidebar: true
+        dataDir: '~/.dsh/memory'
+        providers:
+          local:
+            type: local
+            path: '~/.dsh/memory'
+            engine: file
+          bailian:
+            type: bailian
+            apiKey: 'env:BAILIAN_API_KEY'
+            workspaceId: ''
+            region: cn-beijing
+            userId: dsh
+            memoryLibraryId: ''
+            projectId: ''
+            planVersion: pro
+            timeoutMs: 15000
+        embedding:
+          mode: auto
+          endpoint: ''
+          apiKey: ''
+          model: text-embedding-v3
+        retrieval:
+          mode: hybrid
+          minScore: 0.18
+          llmRerank: true
+          llmTimeoutMs: 8000
+        summarization:
+          shortTurns: 10
+          maxChars: 320
+          llmTimeoutMs: 20000
+        retention:
+          maxMemories: 5000
+          ttlDays: 0
+        knowledgeBase:
+          enabled: true
+          workspace:
+            root: kb
+            overrides: {}
+          global:
+            root: ''
+          chunk:
+            maxChars: 1200
+            minChars: 80
+          refreshSeconds: 300
+          minScore: 0.12
+          injectIndexLines: 30
+          injectMaxChars: 1100

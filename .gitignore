@@ -1,0 +1,15 @@
+# Runtime state written by the plugin when run from this directory
+data/
+*.jsonl
+!test/fixtures/*.jsonl
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Node
+node_modules/
+npm-debug.log*
+pnpm-debug.log*

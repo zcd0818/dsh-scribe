@@ -1,0 +1,66 @@
+{
+  "name": "dsh-scribe",
+  "version": "0.6.2",
+  "private": true,
+  "type": "module",
+  "description": "Cross-session memory and a local knowledge base for DeepSeek Harness: local-first by default, cloud optional, migration always user-approved",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "cordis",
+    "plugin",
+    "memory",
+    "scribe",
+    "knowledge-base",
+    "cross-session",
+    "local-first",
+    "chromadb",
+    "bailian"
+  ],
+  "license": "MIT",
+  "author": "zcd0818",
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zcd0818/dsh-scribe.git"
+  },
+  "homepage": "https://github.com/zcd0818/dsh-scribe#readme",
+  "bugs": {
+    "url": "https://github.com/zcd0818/dsh-scribe/issues"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "src/**/*.js",
+    "LICENSE",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "main": "./index.js"
+}
