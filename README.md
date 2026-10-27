@@ -7,7 +7,7 @@
 > Cross-session memory for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — local-first by default, cloud optional, migration always user-approved.
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![version](https://img.shields.io/badge/version-0.6.2-blue.svg)](package.json)
+[![version](https://img.shields.io/badge/version-1.0.0-blue.svg)](package.json)
 [![test](https://github.com/zcd0818/dsh-scribe/actions/workflows/test.yml/badge.svg)](https://github.com/zcd0818/dsh-scribe/actions/workflows/test.yml)
 [![node](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](package.json)
 [![deps](https://img.shields.io/badge/runtime%20deps-0-success.svg)](package.json)
@@ -131,7 +131,7 @@ memory_search("上次部署脚本怎么写的")
 
 ## 安装
 
-从 npm（发布后可用）：
+从 npm（1.0.0 起）：
 
 ```
 dsh plugin --profile <profile> add dsh-scribe

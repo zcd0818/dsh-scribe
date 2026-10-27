@@ -103,10 +103,10 @@ test('publish: manifest exports every shipped artifact and declares the client h
   assert.equal(manifest.exports['./client'], './client.js')
   assert.equal(manifest.exports['./package.json'], './package.json', 'the client scanner resolves the manifest through this export')
   assert.equal(manifest.dsh.client.platform, 'web')
-  for (const file of ['index.js', 'client.js', 'cordis.patch.yml', 'README.md', 'LICENSE', 'icon.svg']) {
+  for (const file of ['index.js', 'client.js', 'cordis.patch.yml', 'README.md', 'CHANGELOG.md', 'LICENSE', 'icon.svg']) {
     await stat(join(ROOT, file))
   }
-  for (const pattern of ['src/**/*.js', 'locale/*.json']) {
+  for (const pattern of ['src/**/*.js', 'locale/*.json', 'CHANGELOG.md']) {
     assert.ok(manifest.files.includes(pattern), `files must ship ${pattern}`)
   }
 })

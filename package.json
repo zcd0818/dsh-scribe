@@ -1,7 +1,6 @@
 {
   "name": "dsh-scribe",
-  "version": "0.6.2",
-  "private": true,
+  "version": "1.0.0",
   "type": "module",
   "description": "Cross-session memory and a local knowledge base for DeepSeek Harness: local-first by default, cloud optional, migration always user-approved",
   "keywords": [
@@ -44,6 +43,7 @@
     "locale/*.json",
     "icon.svg",
     "src/**/*.js",
+    "CHANGELOG.md",
     "LICENSE",
     "README.md"
   ],
