@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { readFile, readdir, stat } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, relative, sep } from 'node:path'
 import test from 'node:test'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
@@ -18,6 +18,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 
+/** Root-relative POSIX form (`/src/x.js`): the checks must behave the same on Windows. */
+const rel = (file) => `/${relative(ROOT, file).split(sep).join('/')}`
+
 async function walk(dir, out = []) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue
@@ -30,9 +33,7 @@ async function walk(dir, out = []) {
 
 /** Files the package actually publishes (test/ is not shipped). */
 const shippedFiles = async () =>
-  (await walk(ROOT)).filter(
-    (file) => file.endsWith('.js') && !file.includes('/test/') && !file.includes('/node_modules/'),
-  )
+  (await walk(ROOT)).filter((file) => file.endsWith('.js') && !rel(file).startsWith('/test/'))
 
 const sourceFiles = async () => (await walk(ROOT)).filter((file) => file.endsWith('.js'))
 
@@ -41,7 +42,7 @@ test('publish: no machine-specific absolute paths in shipped sources', async () 
   for (const file of await shippedFiles()) {
     const text = await readFile(file, 'utf8')
     for (const pattern of [/\/Users\/[a-z]/i, /\/Applications\/[A-Z]/, /[A-Z]:\\\\Users\\\\/i, /localhost:\\d{4,5}/]) {
-      if (pattern.test(text)) offenders.push(`${file.replace(ROOT, '')}: ${pattern}`)
+      if (pattern.test(text)) offenders.push(`${rel(file)}: ${pattern}`)
     }
   }
   assert.deepEqual(offenders, [], 'shipped code must not bake in one machine’s layout')
@@ -50,15 +51,14 @@ test('publish: no machine-specific absolute paths in shipped sources', async () 
 test('publish: no debugging leftovers in shipped sources', async () => {
   const offenders = []
   for (const file of await shippedFiles()) {
-    if (file.includes('/test/')) continue
     const text = await readFile(file, 'utf8')
     for (const marker of ['TEMP DIAGNOSTIC', '[probe]', 'diagnose.log', 'FIXME']) {
-      if (text.includes(marker)) offenders.push(`${file.replace(ROOT, '')}: ${marker}`)
+      if (text.includes(marker)) offenders.push(`${rel(file)}: ${marker}`)
     }
     // console.log is allowed only in the logger's documented fallback.
-    if (file.endsWith('/src/log.js')) continue
-    if (/console\.log\(/.test(text)) offenders.push(`${file.replace(ROOT, '')}: console.log`)
-    if (/console\.info\(/.test(text)) offenders.push(`${file.replace(ROOT, '')}: console.info`)
+    if (rel(file) === '/src/log.js') continue
+    if (/console\.log\(/.test(text)) offenders.push(`${rel(file)}: console.log`)
+    if (/console\.info\(/.test(text)) offenders.push(`${rel(file)}: console.info`)
   }
   assert.deepEqual(offenders, [])
 })
@@ -73,7 +73,7 @@ test('publish: every imported module resolves', async () => {
       try {
         await stat(target)
       } catch {
-        missing.push(`${file.replace(ROOT, '')} -> ${match[1]}`)
+        missing.push(`${rel(file)} -> ${match[1]}`)
       }
     }
   }
@@ -83,13 +83,13 @@ test('publish: every imported module resolves', async () => {
 test('publish: runtime imports are node builtins only (pdfjs-dist stays optional)', async () => {
   const offenders = []
   for (const file of await sourceFiles()) {
-    if (file.includes('/test/')) continue
+    if (rel(file).startsWith('/test/')) continue
     const text = await readFile(file, 'utf8')
     for (const match of text.matchAll(/^\s*import\s+[^'"]*'([^']+)'/gm)) {
       const specifier = match[1]
       const isRelative = specifier.startsWith('.')
       const isBuiltin = specifier.startsWith('node:')
-      if (!isRelative && !isBuiltin) offenders.push(`${file.replace(ROOT, '')}: ${specifier}`)
+      if (!isRelative && !isBuiltin) offenders.push(`${rel(file)}: ${specifier}`)
     }
   }
   assert.deepEqual(offenders, [], 'a published bundle must not require an uninstalled package')

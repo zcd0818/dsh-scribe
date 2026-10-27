@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { isAbsolute, join } from 'node:path'
 import test from 'node:test'
 
 import { resolveConfig } from '../src/config.js'
@@ -24,7 +24,7 @@ test('config: defaults resolve into a usable local provider', () => {
   const config = resolveConfig({})
   assert.equal(config.defaultProvider, 'local')
   assert.equal(config.providers.local.type, 'local')
-  assert.ok(config.providers.local.path.startsWith('/'))
+  assert.ok(isAbsolute(config.providers.local.path), 'default data dir must be absolute')
   assert.equal(config.autoInject, true)
 })
 
