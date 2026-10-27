@@ -131,23 +131,33 @@ memory_search("上次部署脚本怎么写的")
 
 ## 安装
 
-从 npm（1.0.0 起）：
+三种方式，任选其一。装完返回 `application: applied` 即生效（改的是 Host 行为，不用重启页面），
+卸载用 `plugin_manager · action: remove_bundle · target: dsh-scribe`。
+
+**1) 从 GitHub 直接装**（现在就能用；已实测装出来是 `dsh-scribe@1.0.0`）：
 
 ```
-dsh plugin --profile <profile> add dsh-scribe
+plugin_manager · action: install_bundle · target: github:zcd0818/dsh-scribe#v1.0.0
 ```
 
-本机已有 checkout 时（DSH 原生方式）：
+`#v1.0.0` 是可选的 ref：写 tag 或 commit 便于复现，省略则取默认分支的最新提交。
+这条路径需要能访问 github.com——装之前 DSH 会先 `git ls-remote` 探一次，网络不通会直接报
+`spec-host` 失败，正是你现在的代理要放行的那一步。
+
+**2) 从 npm**（发布后可用）：
+
+```
+plugin_manager · action: install_bundle · target: dsh-scribe@1.0.0
+```
+
+**3) 本机已有 checkout**（开发用，改完即生效）：
 
 ```
 plugin_manager · action: install_bundle · target: /绝对路径/dsh-scribe
 ```
 
-返回 `application: applied` 即生效，无需重启页面（改的是 Host 行为）。卸载：
-
-```
-plugin_manager · action: remove_bundle · target: dsh-scribe
-```
+> 三种方式是同一个包名 `dsh-scribe`，所以后装的会替换先装的：从 GitHub/npm 装过之后再想要「改完即生效」，
+> 得重新装一次第 3 种。
 
 > **改名说明**：本插件原名 `dsh-memory-plugin`（行 id `dsh-memory`），现为 `dsh-scribe`（行 id `dsh-scribe`）。
 > 数据目录 `~/.dsh/memory` 与记忆文件格式都没变，**已有记忆不需要迁移**；
