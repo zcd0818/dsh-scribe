@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { readFile, readdir, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import test from 'node:test'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 /**
  * Pre-publication invariants.
@@ -10,9 +11,12 @@ import test from 'node:test'
  * machine-specific paths, no debugging leftovers, every used style class
  * defined, the published file list complete, and no import that would only
  * resolve on this checkout.
+ *
+ * Paths go through `fileURLToPath` rather than `URL#pathname`: on Windows the
+ * latter yields `/D:/a/...`, and joining it produces `D:\D:\a\...`.
  */
 
-const ROOT = new URL('..', import.meta.url).pathname
+const ROOT = fileURLToPath(new URL('..', import.meta.url))
 
 async function walk(dir, out = []) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
@@ -65,7 +69,7 @@ test('publish: every imported module resolves', async () => {
   for (const file of files) {
     const text = await readFile(file, 'utf8')
     for (const match of text.matchAll(/from\s+'(\.[^']+)'/g)) {
-      const target = new URL(match[1], `file://${file}`).pathname
+      const target = fileURLToPath(new URL(match[1], pathToFileURL(file)))
       try {
         await stat(target)
       } catch {
