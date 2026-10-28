@@ -185,3 +185,38 @@ test('apply: migration refuses without an approval service', async () => {
     await rm(dir, { recursive: true, force: true })
   }
 })
+
+// The plugin-market entry states a tool inventory ("seven memory tools and four
+// kb_* tools"), and reviewers check that claim against the code. Pin it here so
+// a tool added or dropped later fails CI instead of quietly making the listing
+// untrue — update the counts in the listing in the same commit.
+test('apply: tool inventory matches the published counts (7 memory + 4 kb)', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'dsh-scribe-tools-'))
+  try {
+    const ctx = fakeCtx()
+    apply(ctx, {
+      dataDir: dir,
+      providers: { local: { type: 'local', path: join(dir, 'data') } },
+    })
+    const names = [...ctx.__tools.keys()].sort()
+    assert.deepEqual(
+      names.filter((name) => name.startsWith('memory_')),
+      [
+        'memory_forget',
+        'memory_list',
+        'memory_migrate',
+        'memory_migrate_rollback',
+        'memory_save',
+        'memory_search',
+        'memory_status',
+      ],
+    )
+    assert.deepEqual(
+      names.filter((name) => name.startsWith('kb_')),
+      ['kb_read', 'kb_reindex', 'kb_search', 'kb_status'],
+    )
+    assert.equal(names.length, 11)
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
+})
