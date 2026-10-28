@@ -44,7 +44,7 @@
 
 ### 质量
 
-- 114 个测试，`node --test test/*.test.js` 直接跑，**零运行时依赖、无构建步骤、无需 `npm install`**。
+- 115 个测试，`node --test test/*.test.js` 直接跑，**零运行时依赖、无构建步骤、无需 `npm install`**。
 - CI：`node 20 / 22` × `ubuntu / macos / windows` 六个 job 全绿。
 
 ### 已知限制
