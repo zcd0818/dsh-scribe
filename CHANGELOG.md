@@ -7,6 +7,8 @@
 
 首个公开发布版本：跨会话记忆 + 本地知识库，数据默认只存本机。
 
+已发布到 npm：`npm install dsh-scribe`（<https://www.npmjs.com/package/dsh-scribe>），首发版本 1.0.0。
+
 ### 新增
 
 - **跨会话记忆**：会话开始（`agent/created`）检索同项目 + 最近的记忆，注入 system prompt 的

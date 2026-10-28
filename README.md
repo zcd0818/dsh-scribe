@@ -8,6 +8,7 @@
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![version](https://img.shields.io/badge/version-1.0.0-blue.svg)](package.json)
+[![npm](https://img.shields.io/npm/v/dsh-scribe?color=blue&label=npm)](https://www.npmjs.com/package/dsh-scribe)
 [![test](https://github.com/zcd0818/dsh-scribe/actions/workflows/test.yml/badge.svg)](https://github.com/zcd0818/dsh-scribe/actions/workflows/test.yml)
 [![node](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](package.json)
 [![deps](https://img.shields.io/badge/runtime%20deps-0-success.svg)](package.json)
@@ -144,11 +145,13 @@ plugin_manager · action: install_bundle · target: github:zcd0818/dsh-scribe#v1
 这条路径需要能访问 github.com——装之前 DSH 会先 `git ls-remote` 探一次，网络不通会直接报
 `spec-host` 失败，正是你现在的代理要放行的那一步。
 
-**2) 从 npm**（发布后可用）：
+**2) 从 npm**（已发布：<https://www.npmjs.com/package/dsh-scribe>）：
 
 ```
 plugin_manager · action: install_bundle · target: dsh-scribe@1.0.0
 ```
+
+`npm i dsh-scribe` 也能装，装出来的目录结构与 GitHub 那条路径一致（35 个文件，含 `cordis.patch.yml`）。
 
 **3) 本机已有 checkout**（开发用，改完即生效）：
 
