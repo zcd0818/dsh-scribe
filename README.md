@@ -7,7 +7,7 @@
 > Cross-session memory for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — local-first by default, cloud optional, migration always user-approved.
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![version](https://img.shields.io/badge/version-1.0.0-blue.svg)](package.json)
+[![version](https://img.shields.io/badge/version-1.1.0-blue.svg)](package.json)
 [![npm](https://img.shields.io/npm/v/dsh-scribe?color=blue&label=npm)](https://www.npmjs.com/package/dsh-scribe)
 [![test](https://github.com/zcd0818/dsh-scribe/actions/workflows/test.yml/badge.svg)](https://github.com/zcd0818/dsh-scribe/actions/workflows/test.yml)
 [![node](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](package.json)
@@ -32,10 +32,10 @@ AI 编程助手没有记忆：每个新会话都从零开始，你昨天定下�
 | 时机 | 行为 | 预算 |
 |---|---|---|
 | 会话开始（`agent/created`） | 检索同项目 + 最近的记忆，注入 system prompt 的 `memory:context` section | 5 条 / ≤1200 字符 |
-| 会话进行中 | 模型按需调用 `memory_search` / `memory_save` / `memory_list` / `memory_forget` | 按需 |
+| 会话进行中 | 模型按需调用 `scribe_memory_search` / `scribe_memory_save` / `scribe_memory_list` / `scribe_memory_forget` | 按需 |
 | 会话结束（`agent/disposed`） | 把这次会话压成一条记忆写回 | 1 条 |
-| 知识库（可选） | 索引工作区 `kb/` 与全局资料（文本、代码、Word/Excel/PPT）；会话开始注入目录摘要，模型按需 `kb_search` / `kb_read` | 目录摘要 ≤1100 字符 |
-| 你想换后端 | `memory_migrate` → 审批 → 写日志 → `memory_migrate_rollback` | 一次 |
+| 知识库（可选） | 索引工作区 `kb/` 与全局资料（文本、代码、Word/Excel/PPT）；会话开始注入目录摘要，模型按需 `scribe_kb_search` / `scribe_kb_read` | 目录摘要 ≤1100 字符 |
+| 你想换后端 | `scribe_memory_migrate` → 审批 → 写日志 → `scribe_memory_migrate_rollback` | 一次 |
 
 会话结束时的压缩是有区分的：**少于 10 轮**的对话直接保留最后几段原文（便宜、不丢细节）；**更长的**对话交给会话本来就在用的模型，压成「项目在做什么、定了什么、为什么、还欠什么」的一段话。
 
@@ -53,7 +53,7 @@ $ cat ~/.dsh/memory/memories.jsonl
 查询和状态走斜杠命令或模型工具：
 
 ```
-> /memory status
+> /scribe status
 后端: local (local)
 记忆条数: 1
 可用性: 正常
@@ -66,7 +66,7 @@ $ cat ~/.dsh/memory/memories.jsonl
 模型在会话里也能自己翻：
 
 ```
-memory_search("上次部署脚本怎么写的")
+scribe_memory_search("上次部署脚本怎么写的")
 → 1. [2026-10-25] (project:infra) 部署走 deploy.sh，先用 staging 验证再 promote…
 ```
 
@@ -107,7 +107,7 @@ memory_search("上次部署脚本怎么写的")
 
 文件名会去掉路径部分，`../` 这类穿越会被削成纯文件名，且落点一定在该知识库目录内。
 
-会话开始时注入的是**目录摘要**（优先读 `INDEX.md`，没有就退回文件列表），不是全文；模型需要细节时用 `kb_search`，拿到 `kb/设计规范.md#L12-L40` 这样的引用后，用 `kb_read` 读原文行号再引用。
+会话开始时注入的是**目录摘要**（优先读 `INDEX.md`，没有就退回文件列表），不是全文；模型需要细节时用 `scribe_kb_search`，拿到 `kb/设计规范.md#L12-L40` 这样的引用后，用 `scribe_kb_read` 读原文行号再引用。
 
 索引是派生数据，放在 `~/.dsh/memory/kb/indexes/`，**不会改你的文档**；过期自动重建（默认 TTL 300 秒），也可以在设置页「知识库」分页手动重建。
 
@@ -121,8 +121,8 @@ memory_search("上次部署脚本怎么写的")
 |---|---|---|
 | 保存记忆（默认 `local`） | ❌ 否 | 仅 `~/.dsh/memory/memories.jsonl` |
 | 会话开始注入 | ❌ 否 | 从本地文件读 |
-| `memory_search`（未配嵌入端点） | ❌ 否 | 本机词法打分 |
-| `memory_search`（配了 `embedding.endpoint`） | ⚠️ 是 | 只发送待检索的记忆文本，到你自己填的 `/v1/embeddings` 地址 |
+| `scribe_memory_search`（未配嵌入端点） | ❌ 否 | 本机词法打分 |
+| `scribe_memory_search`（配了 `embedding.endpoint`） | ⚠️ 是 | 只发送待检索的记忆文本，到你自己填的 `/v1/embeddings` 地址 |
 | 检索重排（默认开） | ⚠️ 是 | 只把**查询 + 候选记忆摘要**发给当前会话模型，8 秒超时，失败退回原序 |
 | 长对话摘要（默认开） | ⚠️ 是 | 把对话发给当前会话模型（本来就在用它，没有新增接收方） |
 | 迁移到 `bailian` | ⚠️ 是 | 把选中的记忆发到阿里云百炼记忆库 |
@@ -266,20 +266,22 @@ plugin_manager · action: install_bundle · target: /绝对路径/dsh-scribe
 
 ## 使用
 
+> 斜杠命令是 `/scribe`，工具统一带 `scribe_` 前缀（`scribe_memory_*` / `scribe_kb_*`）。原因是 DSH 的注册表遇到重名会直接抛错——`memory_search`、`kb_search`、`/memory` 这些通用名市场上都有别的插件在用，撞上会让**后装的插件整体装不上**。1.0.0 的旧名 `/memory` 仍会在未被占用时自动注册为别名。
+
 - **什么都不用做**：新会话自动带上记忆。
 - **要改设置**：设置 → 记忆与知识库（见上）。
-- **让它记住**：说「记住这个」，或 `/memory save 提交前必须跑 node --test`。
-- **主动查**：`/memory search 部署脚本`，或直接问模型。
-- **看状态**：`/memory status` / `list` / `providers`。
+- **让它记住**：说「记住这个」，或 `/scribe save 提交前必须跑 node --test`。
+- **主动查**：`/scribe search 部署脚本`，或直接问模型。
+- **看状态**：`/scribe status` / `list` / `providers`。
 - **换后端**：
 
   ```
-  /memory migrate bailian          # 只打印计划，不动数据
-  /memory migrate bailian --yes    # 执行，写可回滚日志
-  /memory rollback mig_xxxxxx      # 撤销这次迁移新增的记录
+  /scribe migrate bailian          # 只打印计划，不动数据
+  /scribe migrate bailian --yes    # 执行，写可回滚日志
+  /scribe rollback mig_xxxxxx      # 撤销这次迁移新增的记录
   ```
 
-  模型自己调 `memory_migrate` 时会弹审批框；你拒绝 = 零写入。
+  模型自己调 `scribe_memory_migrate` 时会弹审批框；你拒绝 = 零写入。
 
 ## 后端选择
 
@@ -296,10 +298,10 @@ plugin_manager · action: install_bundle · target: /绝对路径/dsh-scribe
 
 迁移是这个插件里唯一会「批量搬运你的数据」的操作，所以它被设计成四道闸：
 
-1. **先看后动**：`memory_migrate` 第一步只生成计划（多少条、时间范围、目标现状），不写入。
+1. **先看后动**：`scribe_memory_migrate` 第一步只生成计划（多少条、时间范围、目标现状），不写入。
 2. **审批门**：真正执行前走 DSH 的 approval 服务弹框，**拒绝即零写入**；没有审批服务时直接失败（fail-closed，不会悄悄继续）。
 3. **只增不删**：迁移只往目标端新增，源端一条不动。
-4. **可回滚**：日志记下目标端真实写入的 id（百炼会自己生成 node id），`memory_migrate_rollback` 只删这些新增记录，不碰目标端原有数据。
+4. **可回滚**：日志记下目标端真实写入的 id（百炼会自己生成 node id），`scribe_memory_migrate_rollback` 只删这些新增记录，不碰目标端原有数据。
 
 ## 隐私与权限
 
@@ -325,17 +327,17 @@ plugin_manager · action: install_bundle · target: /绝对路径/dsh-scribe
 | `webServer` | 设置页没有数据接口；工具、注入、命令照常工作 |
 | `configEditor` | 设置页只读（不能保存），仍可用 YAML 配置 |
 | `workspaceRegistry` | 知识库分页只显示全局作用域；会话仍按自己的工作目录索引 |
-| `approval` | `memory_migrate` **拒绝执行**（fail-closed），不会静默迁移 |
+| `approval` | `scribe_memory_migrate` **拒绝执行**（fail-closed），不会静默迁移 |
 | `llm` | 长对话摘要退回抽取式；检索重排退回词法顺序 |
-| `commands` | 没有 `/memory` 命令，工具仍可用 |
+| `commands` | 没有 `/scribe` 命令，工具仍可用 |
 | `webServer` 的 `webServer.register` 迟到 | 路由等待服务出现再注册；页面刷新后可用 |
 
 客户端侧只依赖 `slots`；`uiWorkspace` 缺失时「更换目录」退回手动输入路径。
 
 ## 已知限制
 
-1. **首条消息的注入有竞态**：section 的文本提供者是同步的，为不让第一步等磁盘，注入靠 `agent/created` 时的异步预热。预热没赶在第一次 prompt 组装前完成，第一条消息就看不到记忆（第二条起正常），此时仍可用 `memory_search`。
-2. **百炼适配器未用真实凭据联调**：按官方文档契约实现（`/add`、`/memory_nodes/search`、`GET /memory_nodes`、`DELETE /memory_nodes/{id}`），有 stub 单测覆盖，但真实环境的行为请以你的账号为准；`memory_status` 会显示可达性。
+1. **首条消息的注入有竞态**：section 的文本提供者是同步的，为不让第一步等磁盘，注入靠 `agent/created` 时的异步预热。预热没赶在第一次 prompt 组装前完成，第一条消息就看不到记忆（第二条起正常），此时仍可用 `scribe_memory_search`。
+2. **百炼适配器未用真实凭据联调**：按官方文档契约实现（`/add`、`/memory_nodes/search`、`GET /memory_nodes`、`DELETE /memory_nodes/{id}`），有 stub 单测覆盖，但真实环境的行为请以你的账号为准；`scribe_memory_status` 会显示可达性。
 3. **ChromaDB 是可选依赖**：需要另装 `chromadb` 并自建服务端，本插件不捆绑；未安装时报错明确，不影响文件引擎。
 4. **部分失败时日志只记条数**：后端只回报失败条数时，`failedIds` 可能为空（`failedCount` 仍准确）；已写入的 id 一定精确，所以回滚可靠。
 5. **没有 schemastery 配置表单**：插件详情页不会自动生成表单（那样需要引入 `schemastery`）；所有配置在「记忆与知识库」页面里图形化编辑，或直接写 YAML。
@@ -352,7 +354,7 @@ node --test test/*.test.js        # 零依赖，无需 npm install
 
 CI 在 GitHub Actions 上跑三个平台 × 两个 Node 版本（ubuntu / macos / windows × Node 20 / 22），矩阵配置见 `.github/workflows/test.yml`
 
-115 个测试覆盖：配置校验、中文分词与词法打分、JSONL 持久化与墓碑删除、按 tag 过滤与分页、去重与检索、prompt 长度约束、迁移计划（只读）、执行与日志、回滚只删本次新增、两种摘要策略与降级、挂载冒烟、工具清单与已发布数量一致、百炼 wire 契约（stub fetch）、本地接口（同源校验、计划 token、单次使用、回滚、延迟注册）、知识库（标题切块与行号、glob 排除、增量复用与删除、引用格式、作用域排序、按行读取、目录摘要、peek 不构建、全局目录自动创建、上传落盘与路径穿越削减、目录切换与恢复默认、默认支持的文件类型边界）、文档抽取（内置 ZIP 读取、docx 段落、xlsx 共享字符串、pdf 缺失依赖时跳过、kb_read 读抽取正文）、发布前不变量（无本机路径、无调试残留、导入可解析、样式类齐全、清单导出完整）、健壮性（缺服务可挂载、坏索引可重建、不可读/超大文件跳过、并发索引共享一次构建）、界面结构（列表栅格列数恒定、空态与超长路径不破版）、以及四个分页的无浏览器渲染冒烟。
+117 个测试覆盖：配置校验、中文分词与词法打分、JSONL 持久化与墓碑删除、按 tag 过滤与分页、去重与检索、prompt 长度约束、迁移计划（只读）、执行与日志、回滚只删本次新增、两种摘要策略与降级、挂载冒烟、工具清单与已发布数量一致、百炼 wire 契约（stub fetch）、本地接口（同源校验、计划 token、单次使用、回滚、延迟注册）、知识库（标题切块与行号、glob 排除、增量复用与删除、引用格式、作用域排序、按行读取、目录摘要、peek 不构建、全局目录自动创建、上传落盘与路径穿越削减、目录切换与恢复默认、默认支持的文件类型边界）、文档抽取（内置 ZIP 读取、docx 段落、xlsx 共享字符串、pdf 缺失依赖时跳过、scribe_kb_read 读抽取正文）、发布前不变量（无本机路径、无调试残留、导入可解析、样式类齐全、清单导出完整）、健壮性（缺服务可挂载、坏索引可重建、不可读/超大文件跳过、并发索引共享一次构建）、界面结构（列表栅格列数恒定、空态与超长路径不破版）、以及四个分页的无浏览器渲染冒烟。
 
 ```
 index.js                  插件入口（apply：装配 config → service → 会话层/工具/命令）
@@ -362,7 +364,7 @@ src/store.js              JSONL 追加存储（墓碑删除、原子重写、写
 src/embeddings.js         可选 /v1/embeddings 客户端 + 磁盘向量缓存
 src/providers/            base（契约+统一排序）/ local / chroma / bailian / hybrid / factory
 src/session/              lifecycle（注入与回写）/ summarize（两种摘要策略）
-src/tools/                memory-tools（模型工具，含迁移审批）/ commands（/memory）
+src/tools/                memory-tools（模型工具，含迁移审批）/ commands（/scribe，/memory 为可用时自动注册的别名）
 src/migration/            migrate（计划→执行→日志→回滚）
 src/kb/                   chunk（按标题切块+引用）/ indexer（增量索引）/ service（双作用域检索）/ tools（kb_*）
 src/web/                  api（设置页本地接口：同源校验 + 计划 token）/ config-store（读写 profile 配置）
@@ -372,14 +374,14 @@ client.js                 设置页（React，注入 settings.section，三个�
 ## 路线图
 
 - [ ] 首次使用引导：检测到已有记忆时，交互式提示选择后端，而不是让你先改 YAML
-- [ ] 记忆「为什么被记住」溯源：`memory_list` 里回链到来源会话
+- [ ] 记忆「为什么被记住」溯源：`scribe_memory_list` 里回链到来源会话
 - [ ] 冲突解决：同一主题的新旧记忆并存时，标出可能过期的条目
-- [ ] 记忆浏览：在设置页里直接看/搜/删单条记忆（目前只有 `memory_list` 工具与 `/memory list`）
+- [ ] 记忆浏览：在设置页里直接看/搜/删单条记忆（目前只有 `scribe_memory_list` 工具与 `/scribe list`）
 - [ ] PDF 抽取开箱可用（目前需可选依赖 `pdfjs-dist`；Word/Excel/PPT 已内置）
 - [ ] 知识库向量检索（当前是词法打分；嵌入端点复用记忆那套）
 - [ ] 更多后端：自建 OpenAI 兼容向量库、本地 Ollama 嵌入
 
-有需求或踩到坑，欢迎开 issue —— 尤其是**你所在环境的 DSH 版本**和 `memory_status` 的输出，那能省掉一半排查。
+有需求或踩到坑，欢迎开 issue —— 尤其是**你所在环境的 DSH 版本**和 `scribe_memory_status` 的输出，那能省掉一半排查。
 
 ## 贡献
 

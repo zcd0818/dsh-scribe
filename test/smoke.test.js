@@ -83,13 +83,13 @@ test('apply: mounts tools and lifecycle listeners without a full Host', async ()
     })
 
     for (const name of [
-      'memory_save',
-      'memory_search',
-      'memory_list',
-      'memory_forget',
-      'memory_status',
-      'memory_migrate',
-      'memory_migrate_rollback',
+      'scribe_memory_save',
+      'scribe_memory_search',
+      'scribe_memory_list',
+      'scribe_memory_forget',
+      'scribe_memory_status',
+      'scribe_memory_migrate',
+      'scribe_memory_migrate_rollback',
     ]) {
       assert.ok(ctx.__tools.has(name), `tool ${name} should be registered`)
     }
@@ -97,7 +97,7 @@ test('apply: mounts tools and lifecycle listeners without a full Host', async ()
     assert.ok(ctx.__listeners.has('agent/disposed'))
 
     // Save one memory through the tool, exactly as the model would.
-    const save = ctx.__tools.get('memory_save')
+    const save = ctx.__tools.get('scribe_memory_save')
     const saved = await save.execute({ content: '项目约定：pnpm + node 20', tags: ['project:demo'] }, { agent: undefined })
     assert.match(saved, /已保存记忆/)
 
@@ -142,7 +142,7 @@ test('apply: a short session is written back as one memory on dispose', async ()
     await tick()
     await tick()
 
-    const list = ctx.__tools.get('memory_list')
+    const list = ctx.__tools.get('scribe_memory_list')
     const listed = await list.execute({ limit: 10 }, {})
     assert.match(listed, /~\/.dsh\/memory/)
   } finally {
@@ -177,20 +177,20 @@ test('apply: migration refuses without an approval service', async () => {
         other: { type: 'local', path: join(dir, 'other') },
       },
     })
-    await ctx.__tools.get('memory_save').execute({ content: '待迁移的记忆' }, {})
-    const text = await ctx.__tools.get('memory_migrate').execute({ to: 'other' }, { agent: undefined })
+    await ctx.__tools.get('scribe_memory_save').execute({ content: '待迁移的记忆' }, {})
+    const text = await ctx.__tools.get('scribe_memory_migrate').execute({ to: 'other' }, { agent: undefined })
     assert.match(text, /未批准迁移/)
-    assert.equal(await ctx.__tools.get('memory_status').execute({}, {}).then(() => 0), 0)
+    assert.equal(await ctx.__tools.get('scribe_memory_status').execute({}, {}).then(() => 0), 0)
   } finally {
     await rm(dir, { recursive: true, force: true })
   }
 })
 
-// The plugin-market entry states a tool inventory ("seven memory tools and four
-// kb_* tools"), and reviewers check that claim against the code. Pin it here so
+// The plugin-market entry states a tool inventory ("seven scribe_memory_* tools and
+// four scribe_kb_* tools"), and reviewers check that claim against the code. Pin it here so
 // a tool added or dropped later fails CI instead of quietly making the listing
 // untrue — update the counts in the listing in the same commit.
-test('apply: tool inventory matches the published counts (7 memory + 4 kb)', async () => {
+test('apply: tool inventory matches the published counts (7 scribe_memory_* + 4 scribe_kb_*)', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'dsh-scribe-tools-'))
   try {
     const ctx = fakeCtx()
@@ -200,20 +200,20 @@ test('apply: tool inventory matches the published counts (7 memory + 4 kb)', asy
     })
     const names = [...ctx.__tools.keys()].sort()
     assert.deepEqual(
-      names.filter((name) => name.startsWith('memory_')),
+      names.filter((name) => name.startsWith('scribe_memory_')),
       [
-        'memory_forget',
-        'memory_list',
-        'memory_migrate',
-        'memory_migrate_rollback',
-        'memory_save',
-        'memory_search',
-        'memory_status',
+        'scribe_memory_forget',
+        'scribe_memory_list',
+        'scribe_memory_migrate',
+        'scribe_memory_migrate_rollback',
+        'scribe_memory_save',
+        'scribe_memory_search',
+        'scribe_memory_status',
       ],
     )
     assert.deepEqual(
-      names.filter((name) => name.startsWith('kb_')),
-      ['kb_read', 'kb_reindex', 'kb_search', 'kb_status'],
+      names.filter((name) => name.startsWith('scribe_kb_')),
+      ['scribe_kb_read', 'scribe_kb_reindex', 'scribe_kb_search', 'scribe_kb_status'],
     )
     assert.equal(names.length, 11)
   } finally {

@@ -1,6 +1,6 @@
 {
   "name": "dsh-scribe",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "Cross-session memory and a local knowledge base for DeepSeek Harness: local-first by default, cloud optional, migration always user-approved",
   "keywords": [
@@ -14,7 +14,8 @@
     "cross-session",
     "local-first",
     "chromadb",
-    "bailian"
+    "bailian",
+    "scribe-memory"
   ],
   "license": "MIT",
   "author": "zcd0818",

@@ -149,7 +149,7 @@ test('service: digest uses INDEX.md and stays bounded', async () => {
     const digest = await fixture.service.digest({ cwd: fixture.dir })
     assert.match(digest, /知识库目录/)
     assert.match(digest, /设计规范\.md/)
-    assert.match(digest, /kb_search/)
+    assert.match(digest, /scribe_kb_search/)
     assert.ok(digest.length <= 1300)
   } finally {
     await fixture.cleanup()

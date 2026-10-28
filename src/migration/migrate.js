@@ -215,6 +215,6 @@ export function formatPlan(plan) {
     `  目标：${target.id}（${target.type}）— 现有 ${target.count} 条`,
     '',
     '  迁移只会向目标新增记录，不会删除源数据。',
-    '  迁移结束会写入日志；可用 memory_migrate_rollback 撤销本次新增。',
+    '  迁移结束会写入日志；可用 scribe_memory_migrate_rollback 撤销本次新增。',
   ].join('\n')
 }

@@ -1,7 +1,7 @@
 /**
  * Model-facing knowledge-base tools.
  *
- * `kb_search` finds the chunk, `kb_read` returns the exact numbered lines so an
+ * `scribe_kb_search` finds the chunk, `scribe_kb_read` returns the exact numbered lines so an
  * answer can quote `kb/路径.md#L12-L40` — the citation convention this
  * workspace already uses. Search alone would leave the model paraphrasing.
  *
@@ -24,10 +24,10 @@ export function installKbTools({ ctx, kb, config, logger }) {
   if (!kb.enabled) return
 
   ctx.tools.register({
-    name: 'kb_search',
+    name: 'scribe_kb_search',
     description:
       'Search the project knowledge base (workspace kb/ first, then shared global knowledge) and return passages with citations. ' +
-      'Use it before answering questions about conventions, specs, or past decisions; follow a hit with kb_read when you need exact wording.',
+      'Use it before answering questions about conventions, specs, or past decisions; follow a hit with scribe_kb_read when you need exact wording.',
     parameters: {
       type: 'object',
       properties: {
@@ -55,19 +55,19 @@ export function installKbTools({ ctx, kb, config, logger }) {
       return [
         ...hits.map((hit, index) => formatHit(hit, index + 1)),
         '',
-        '用 kb_read 读取原文行号后再引用。',
+        '用 scribe_kb_read 读取原文行号后再引用。',
       ].join('\n')
     },
   })
 
   ctx.tools.register({
-    name: 'kb_read',
+    name: 'scribe_kb_read',
     description:
       'Read a knowledge-base document (optionally a line range) with line numbers, so a citation can point at exact lines.',
     parameters: {
       type: 'object',
       properties: {
-        path: { type: 'string', description: 'Path as returned by kb_search, e.g. "kb/设计规范.md" or "设计规范.md".' },
+        path: { type: 'string', description: 'Path as returned by scribe_kb_search, e.g. "kb/设计规范.md" or "设计规范.md".' },
         start: { type: 'integer', description: 'First line (1-based). Defaults to 1.' },
         end: { type: 'integer', description: 'Last line. Defaults to the end of the file.' },
         scope: {
@@ -105,7 +105,7 @@ export function installKbTools({ ctx, kb, config, logger }) {
   })
 
   ctx.tools.register({
-    name: 'kb_reindex',
+    name: 'scribe_kb_reindex',
     description:
       'Rebuild the knowledge-base index. Run it after adding or editing documents; a stale index also refreshes on its own TTL.',
     parameters: {
@@ -134,7 +134,7 @@ export function installKbTools({ ctx, kb, config, logger }) {
   })
 
   ctx.tools.register({
-    name: 'kb_status',
+    name: 'scribe_kb_status',
     description: 'Report what the knowledge base currently has indexed, per scope, and when it was last rebuilt.',
     parameters: { type: 'object', properties: {}, additionalProperties: false },
     output: TEXT_OUTPUT,

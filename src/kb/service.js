@@ -279,7 +279,7 @@ export class KbService {
       parts.push(`### ${label}\n${body}`)
     }
     if (parts.length === 0) return ''
-    const text = `## 知识库目录\n\n${parts.join('\n\n')}\n\n（用 kb_search 检索全文，用 kb_read 读原文并给出 kb/路径.md#L行号 引用）`
+    const text = `## 知识库目录\n\n${parts.join('\n\n')}\n\n（用 scribe_kb_search 检索全文，用 scribe_kb_read 读原文并给出 kb/路径.md#L行号 引用）`
     return truncate(text, this.settings.injectMaxChars)
   }
 
@@ -306,7 +306,7 @@ export class KbService {
   }
 
   /**
-   * Snapshot for the settings page and `kb_status`.
+   * Snapshot for the settings page and `scribe_kb_status`.
    * @param options - `{ cwd }`.
    * @returns `{ enabled, refreshSeconds, scopes }`.
    */

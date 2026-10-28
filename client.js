@@ -1196,7 +1196,7 @@ window.__ModuleLoader__.load({
           'div',
           { className: 'dsh-mem-card' },
           h('h3', null, '使用方式'),
-          h('p', { className: 'dsh-mem-hint' }, '会话开始时注入目录摘要，优先读取 INDEX.md；模型以 kb_search 检索、kb_read 读取原文行号，并以 kb/路径.md#L行号 标注来源。'),
+          h('p', { className: 'dsh-mem-hint' }, '会话开始时注入目录摘要，优先读取 INDEX.md；模型以 scribe_kb_search 检索、scribe_kb_read 读取原文行号，并以 kb/路径.md#L行号 标注来源。'),
           h('p', { className: 'dsh-mem-hint' }, '索引为派生数据，存放于 ~/.dsh/memory/kb/indexes/，可随时重建，不会改动原文档。'),
           h(
             'p',

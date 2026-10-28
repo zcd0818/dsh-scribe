@@ -123,7 +123,7 @@ test('service: a docx in kb/ is indexed from its extracted text and readable', a
     const state = await service.state({ cwd: dir })
     assert.deepEqual(state.extract.documents.includes('.docx'), true)
 
-    // kb_read follows the cached extraction instead of reading binary garbage.
+    // scribe_kb_read follows the cached extraction instead of reading binary garbage.
     const read = await service.read({ scope: 'workspace', path: '会议纪要.docx', cwd: dir })
     assert.match(read.content, /季度目标/)
   } finally {

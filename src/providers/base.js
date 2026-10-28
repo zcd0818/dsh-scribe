@@ -75,7 +75,7 @@ export class MemoryStorageProvider {
     this.logger = logger
   }
 
-  /** @returns the provider type reported by `memory_status`. */
+  /** @returns the provider type reported by `scribe_memory_status`. */
   get kind() {
     return this.config?.type ?? 'unknown'
   }

@@ -1,8 +1,8 @@
 /**
- * `/memory` slash command.
+ * `/scribe` slash command (`/memory` is best-effort alias).
  *
  * Commands are the human's own control surface: the plugin can print state and
- * run a migration only after `/memory migrate <to> --yes`, which is a second,
+ * run a migration only after `/scribe migrate <to> --yes`, which is a second,
  * explicit act on top of the tool-side approval gate.
  *
  * @module dsh-scribe/tools/commands
@@ -18,12 +18,12 @@ import { isoDate, oneLine } from '../util.js'
 export function installCommands({ ctx, service, config, logger }) {
   const commands = ctx.get('commands')
   if (commands === undefined || typeof commands.register !== 'function') {
-    logger?.debug?.('commands service unavailable; /memory command not registered')
+    logger?.debug?.('commands service unavailable; /scribe command not registered')
     return
   }
 
-  commands.register({
-    name: 'memory',
+  const definition = {
+    name: 'scribe',
     description: '查看和管理长期记忆：status | list | search <词> | save <内容> | migrate <provider> [--yes] | rollback <id>',
     input: { hint: 'status | list | search <词> | save <内容> | migrate <to> [--yes] | rollback <migration-id>' },
     handler: async ({ agent, rawInput }) => {
@@ -45,7 +45,7 @@ export function installCommands({ ctx, service, config, logger }) {
           }
           case 'search': {
             const query = rest.join(' ').trim()
-            if (query.length === 0) return err('用法：/memory search <关键词>')
+            if (query.length === 0) return err('用法：/scribe search <关键词>')
             const memories = await service.search(query, { limit: 8, agent })
             if (memories.length === 0) return ok(`没有匹配「${query}」的记忆。`)
             return ok(
@@ -56,7 +56,7 @@ export function installCommands({ ctx, service, config, logger }) {
           }
           case 'save': {
             const content = rest.join(' ').trim()
-            if (content.length === 0) return err('用法：/memory save <要记住的内容>')
+            if (content.length === 0) return err('用法：/scribe save <要记住的内容>')
             const { memory, duplicate } = await service.add({
               content,
               source: 'user-explicit',
@@ -68,7 +68,7 @@ export function installCommands({ ctx, service, config, logger }) {
           case 'migrate': {
             const to = rest[0]
             const confirmed = rest.includes('--yes') || rest.includes('-y')
-            if (to === undefined) return err(`用法：/memory migrate <provider> [--yes]\n已配置：${Object.keys(config.providers).join(', ')}`)
+            if (to === undefined) return err(`用法：/scribe migrate <provider> [--yes]\n已配置：${Object.keys(config.providers).join(', ')}`)
             if (config.providers[to] === undefined) return err(`未知 provider「${to}」。已配置：${Object.keys(config.providers).join(', ')}`)
             const plan = await planMigration({ service, config, from: config.defaultProvider, to })
             if (!confirmed) {
@@ -77,8 +77,8 @@ export function installCommands({ ctx, service, config, logger }) {
                   formatPlan(plan),
                   '',
                   '这是预览。确认无误后执行：',
-                  `  /memory migrate ${to} --yes`,
-                  '（agent 也可以调用 memory_migrate，那时你会收到一次审批确认。）',
+                  `  /scribe migrate ${to} --yes`,
+                  '（agent 也可以调用 scribe_memory_migrate，那时你会收到一次审批确认。）',
                 ].join('\n'),
               )
             }
@@ -88,7 +88,7 @@ export function installCommands({ ctx, service, config, logger }) {
                 `迁移${record.status === 'complete' ? '完成' : record.status === 'partial' ? '部分完成' : '失败'}：${record.from} → ${record.to}`,
                 `  成功 ${record.successCount} 条，失败 ${record.failedCount} 条，耗时 ${(record.durationMs / 1000).toFixed(1)} 秒`,
                 `  迁移 id: ${record.id}`,
-                `  撤销：/memory rollback ${record.id}`,
+                `  撤销：/scribe rollback ${record.id}`,
               ].join('\n'),
             )
           }
@@ -112,11 +112,24 @@ export function installCommands({ ctx, service, config, logger }) {
             return err(`未知子命令「${sub}」。可用：status | list | search | save | migrate | rollback | providers`)
         }
       } catch (error) {
-        logger?.warn?.('/memory %s failed: %s', sub, error?.message ?? error)
+        logger?.warn?.('/scribe %s failed: %s', sub, error?.message ?? error)
         return err(`执行失败：${error?.message ?? error}`)
       }
     },
-  })
+  }
+
+  commands.register(definition)
+
+  // `/memory` is the name 1.0.0 shipped and the one people are most likely to
+  // type first, but several other memory plugins claim it, and the command
+  // registry throws on a duplicate name. Register the identical handler under
+  // that name only while it is still free — a collision must not cost the
+  // plugin its `/scribe` command, or the rest of its mount.
+  try {
+    commands.register({ ...definition, name: 'memory' })
+  } catch (error) {
+    logger?.debug?.('command name "memory" is taken; /memory alias skipped: %s', error?.message ?? error)
+  }
 }
 
 async function statusText(service, config) {

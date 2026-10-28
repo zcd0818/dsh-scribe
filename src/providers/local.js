@@ -91,7 +91,7 @@ export class LocalProvider extends MemoryStorageProvider {
     await this.store.destroy()
   }
 
-  /** Disk footprint reported by `memory_status`. */
+  /** Disk footprint reported by `scribe_memory_status`. */
   async size() {
     if (this.engine === 'chromadb') return 0
     return this.store.size()

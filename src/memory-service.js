@@ -227,7 +227,7 @@ export class MemoryService {
   }
 
   /**
-   * Snapshot used by `memory_status` and the `/memory status` command.
+   * Snapshot used by `scribe_memory_status` and the `/scribe status` command.
    * @returns counts, size, date range, and backend health.
    */
   async status() {
@@ -266,7 +266,7 @@ export class MemoryService {
       lines.push(`- [${isoDate(memory.createdAt)}]${tags} ${oneLine(memory.content, 160)}`)
     }
     const total = Number(options.total) || memories.length
-    const more = total > memories.length ? `\n（共 ${total} 条；用 memory_search 检索更多）` : ''
+    const more = total > memories.length ? `\n（共 ${total} 条；用 scribe_memory_search 检索更多）` : ''
     const body = truncate(lines.join('\n'), Math.max(80, maxChars - more.length))
     return `## 长期记忆（来自之前与你协作的会话）\n\n${body}${more}`
   }

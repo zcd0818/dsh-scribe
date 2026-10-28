@@ -3,6 +3,23 @@
 本文件记录 dsh-scribe 的版本变化。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.1.0] - 2026-10-28
+
+工具与斜杠命令改名：从通用名换成插件自己的命名空间。
+
+原因是撞名不是审美问题——DSH 的工具/命令注册表遇到重名**直接抛错**（不是警告），而 `memory_search`、`kb_search`、`/memory` 这些通用名在插件市场里各有 3–6 个插件在用。同一个组合里装了两个，后装的那个 `apply()` 会在注册时中断，连它自己的其余工具、命令、设置页都装不上。改名后 `scribe_*` 前缀在市场里没有别的插件占用。
+
+### 变更（不兼容）
+
+- 记忆工具：`memory_save` / `memory_search` / `memory_list` / `memory_forget` / `memory_status` / `memory_migrate` / `memory_migrate_rollback` → 统一加前缀，如 `scribe_memory_search`
+- 知识库工具：`kb_search` / `kb_read` / `kb_reindex` / `kb_status` → `scribe_kb_search` / `scribe_kb_read` / `scribe_kb_reindex` / `scribe_kb_status`
+- 斜杠命令：`/memory` → `/scribe`（子命令不变）；`/memory` 只在名字空闲时额外注册为别名，被别的插件占用时静默跳过，不影响 `/scribe`
+- 注入给模型的提示文本、README、设置页提示同步改名
+
+### 升级
+
+1.0.0 发布仅数小时、无实际用户：先 `plugin_manager · action: remove_bundle · target: dsh-scribe` 再装 1.1.0 即可。如果你自己的提示词、技能或脚本里写了旧工具名，按上表改名。
+
 ## [1.0.0] - 2026-10-27
 
 首个公开发布版本：跨会话记忆 + 本地知识库，数据默认只存本机。

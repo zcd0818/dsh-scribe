@@ -60,7 +60,7 @@ test('robustness: mounts with only the hard-dependency services present', async 
   try {
     const ctx = bareContext()
     apply(ctx, { dataDir: dir, providers: { local: { type: 'local', path: join(dir, 'data') } } })
-    for (const name of ['memory_save', 'memory_search', 'kb_search', 'kb_read', 'kb_reindex', 'kb_status']) {
+    for (const name of ['scribe_memory_save', 'scribe_memory_search', 'scribe_kb_search', 'scribe_kb_read', 'scribe_kb_reindex', 'scribe_kb_status']) {
       assert.ok(ctx.__tools.has(name), `${name} should be registered without optional services`)
     }
     assert.ok(ctx.__listeners.has('agent/created'))
@@ -89,9 +89,9 @@ test('robustness: disabling the knowledge base removes its tools but keeps memor
       knowledgeBase: { enabled: false },
       providers: { local: { type: 'local', path: join(dir, 'data') } },
     })
-    assert.ok(ctx.__tools.has('memory_save'))
-    assert.equal(ctx.__tools.has('kb_search'), false)
-    assert.equal(ctx.__tools.has('kb_reindex'), false)
+    assert.ok(ctx.__tools.has('scribe_memory_save'))
+    assert.equal(ctx.__tools.has('scribe_kb_search'), false)
+    assert.equal(ctx.__tools.has('scribe_kb_reindex'), false)
   } finally {
     await rm(dir, { recursive: true, force: true })
   }

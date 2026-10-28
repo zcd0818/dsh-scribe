@@ -11,7 +11,7 @@ import { installCommands } from '../src/tools/commands.js'
 const logger = { debug() {}, info() {}, warn() {}, error() {} }
 
 /** Capture the one registered command and expose a runner. */
-async function mount() {
+async function mount({ taken = [] } = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'dsh-scribe-cmd-'))
   const config = resolveConfig({
     dataDir: dir,
@@ -22,20 +22,51 @@ async function mount() {
     },
   })
   const service = createMemoryService({ ctx: { get: () => undefined }, config, logger })
-  let registered
+  /** Mirrors the real registry: a duplicate name is an error, not a warning. */
+  const definitions = []
   const ctx = {
-    get: (name) => (name === 'commands' ? { register: (definition) => { registered = definition } } : undefined),
+    get: (name) => (name === 'commands'
+      ? {
+        register: (definition) => {
+          if (taken.includes(definition.name) || definitions.some((d) => d.name === definition.name)) {
+            throw new Error(`command "${definition.name}" is already registered`)
+          }
+          definitions.push(definition)
+        },
+      }
+      : undefined),
   }
   installCommands({ ctx, service, config, logger })
-  const run = (rawInput) => registered.handler({ agent: undefined, rawInput, attachments: [], signal: new AbortController().signal })
-  return { dir, config, service, definition: registered, run }
+  const definition = definitions.find((d) => d.name === 'scribe')
+  const run = (rawInput) => definition.handler({ agent: undefined, rawInput, attachments: [], signal: new AbortController().signal })
+  return { dir, config, service, definitions, definition, run }
 }
 
-test('command: registers under the name memory', async () => {
+test('command: registers under the name scribe', async () => {
   const { dir, definition } = await mount()
   try {
-    assert.equal(definition.name, 'memory')
+    assert.equal(definition.name, 'scribe')
     assert.match(definition.description, /status/)
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
+})
+
+test('command: /memory alias registers while the name is free', async () => {
+  const { dir, definitions } = await mount()
+  try {
+    assert.deepEqual(definitions.map((d) => d.name), ['scribe', 'memory'])
+    const [primary, alias] = definitions
+    assert.equal(alias.handler, primary.handler, 'the alias runs the same handler')
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
+})
+
+test('command: /memory alias is skipped when another plugin owns the name', async () => {
+  const { dir, definitions } = await mount({ taken: ['memory'] })
+  try {
+    assert.deepEqual(definitions.map((d) => d.name), ['scribe'])
   } finally {
     await rm(dir, { recursive: true, force: true })
   }

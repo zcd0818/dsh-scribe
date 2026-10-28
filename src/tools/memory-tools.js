@@ -24,7 +24,7 @@ const TEXT_OUTPUT = {
  */
 export function installMemoryTools({ ctx, service, config, logger }) {
   ctx.tools.register({
-    name: 'memory_save',
+    name: 'scribe_memory_save',
     description:
       'Save one durable memory for future sessions: a decision, a convention, a user preference, or an unresolved todo. ' +
       'Use this when the user says to remember something, or when you reach a conclusion that should survive this session. ' +
@@ -63,7 +63,7 @@ export function installMemoryTools({ ctx, service, config, logger }) {
   })
 
   ctx.tools.register({
-    name: 'memory_search',
+    name: 'scribe_memory_search',
     description:
       'Search long-term memory written by earlier sessions. Use it when the current task may depend on past decisions, ' +
       'conventions, or user preferences that are not already in the injected memory block.',
@@ -94,7 +94,7 @@ export function installMemoryTools({ ctx, service, config, logger }) {
   })
 
   ctx.tools.register({
-    name: 'memory_list',
+    name: 'scribe_memory_list',
     description: 'List the most recent long-term memories, newest first. Use it to see what is stored before saving a duplicate.',
     parameters: {
       type: 'object',
@@ -120,12 +120,12 @@ export function installMemoryTools({ ctx, service, config, logger }) {
   })
 
   ctx.tools.register({
-    name: 'memory_forget',
+    name: 'scribe_memory_forget',
     description: 'Delete one memory by id. Only do this when the user asks to forget it, or when the memory is verifiably wrong.',
     parameters: {
       type: 'object',
       properties: {
-        id: { type: 'string', description: 'The memory id shown by memory_list or memory_search.' },
+        id: { type: 'string', description: 'The memory id shown by scribe_memory_list or scribe_memory_search.' },
       },
       required: ['id'],
       additionalProperties: false,
@@ -140,7 +140,7 @@ export function installMemoryTools({ ctx, service, config, logger }) {
   })
 
   ctx.tools.register({
-    name: 'memory_status',
+    name: 'scribe_memory_status',
     description: 'Report which memory backend is active, how many memories are stored, and whether it is reachable.',
     parameters: { type: 'object', properties: {}, additionalProperties: false },
     output: TEXT_OUTPUT,
@@ -164,7 +164,7 @@ export function installMemoryTools({ ctx, service, config, logger }) {
   })
 
   ctx.tools.register({
-    name: 'memory_migrate',
+    name: 'scribe_memory_migrate',
     description:
       'Copy memories from the active provider to another configured provider. Requires the user to approve the operation; ' +
       'nothing is written before that approval. Shows the plan first, then migrates, then records an undoable journal entry.',
@@ -194,7 +194,7 @@ export function installMemoryTools({ ctx, service, config, logger }) {
         ctx,
         logger,
         agent: exec?.agent,
-        toolName: 'memory_migrate',
+        toolName: 'scribe_memory_migrate',
         reason: formatPlan(plan),
         en: `Copy ${plan.source.count} memories from ${plan.from} to ${plan.to}?`,
         zh: `要把 ${plan.source.count} 条记忆从 ${plan.from} 迁移到 ${plan.to} 吗？`,
@@ -217,7 +217,7 @@ export function installMemoryTools({ ctx, service, config, logger }) {
         `  ${record.from} → ${record.to}`,
         `  成功 ${record.successCount} 条，失败 ${record.failedCount} 条，耗时 ${(record.durationMs / 1000).toFixed(1)} 秒`,
         `  迁移 id: ${record.id}（可回滚）`,
-        record.failedCount > 0 ? '  有失败项，可重试或使用 memory_migrate_rollback 撤销本次新增。' : '',
+        record.failedCount > 0 ? '  有失败项，可重试或使用 scribe_memory_migrate_rollback 撤销本次新增。' : '',
       ]
         .filter((line) => line.length > 0)
         .join('\n')
@@ -225,13 +225,13 @@ export function installMemoryTools({ ctx, service, config, logger }) {
   })
 
   ctx.tools.register({
-    name: 'memory_migrate_rollback',
+    name: 'scribe_memory_migrate_rollback',
     description:
       'Undo a migration by deleting exactly the memories that migration added to its target. Requires user approval.',
     parameters: {
       type: 'object',
       properties: {
-        migration_id: { type: 'string', description: 'The migration id reported by memory_migrate.' },
+        migration_id: { type: 'string', description: 'The migration id reported by scribe_memory_migrate.' },
       },
       required: ['migration_id'],
       additionalProperties: false,
@@ -249,7 +249,7 @@ export function installMemoryTools({ ctx, service, config, logger }) {
         ctx,
         logger,
         agent: exec?.agent,
-        toolName: 'memory_migrate_rollback',
+        toolName: 'scribe_memory_migrate_rollback',
         reason: `回滚迁移 ${migrationId}：只删除这次迁移写入目标端的新增记录。`,
         en: `Roll back migration ${migrationId}?`,
         zh: `要回滚迁移 ${migrationId} 吗？`,
